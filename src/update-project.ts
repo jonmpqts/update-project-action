@@ -173,8 +173,10 @@ export async function fetchProjectMetadata(
 
   const iteration =
     value.startsWith("[") && value.endsWith("]")
-      ? iterations[parseInt(value.slice(1).slice(0, -1))]
-      : iterations?.find((i: GraphQlQueryResponseData) => i.title === value);
+      ? field.iterations[parseInt(value.slice(1).slice(0, -1))]
+      : field.iterations?.find(
+          (i: GraphQlQueryResponseData) => i.title === value
+        );
 
   if (field.dataType === "iteration" && operation === "update") {
     if (!ensureExists(iteration, "Iteration", `Value ${value}`)) {
