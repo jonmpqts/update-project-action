@@ -125,6 +125,12 @@ export async function fetchProjectMetadata(
                   name
                 }
               }
+	      ... on ProjectV2IterationField {
+                iterations {
+		  id
+		  title
+		}
+              }
             }
           }
         }
@@ -165,12 +171,24 @@ export async function fetchProjectMetadata(
     }
   }
 
+  const iteration =
+    value.startsWith("[") && value.endsWith("]")
+      ? iterations[parseInt(value.slice(1).slice(0, -1))]
+      : iterations?.find((i: GraphQlQueryResponseData) => i.title === value);
+
+  if (field.dataType === "iteration" && operation === "update") {
+    if (!ensureExists(iteration, "Iteration", `Value ${value}`)) {
+      return {};
+    }
+  }
+
   return {
     projectId: result.organization.projectV2.id,
     field: {
       fieldId: field.id,
       fieldType: field.dataType.toLowerCase(),
       optionId: option?.id,
+      iterationId: iteration?.id,
     },
   };
 }
@@ -229,6 +247,9 @@ export async function updateField(
   if (projectMetadata.field.fieldType === "single_select") {
     valueToSet = projectMetadata.field.optionId;
     valueType = "singleSelectOptionId";
+  } else if (projectMetadata.field.fieldType === "iteration") {
+    valueToSet = projectMetadata.field.iterationId;
+    valueType = "iterationId";
   } else {
     valueToSet = value;
     valueType = projectMetadata.field.fieldType;
