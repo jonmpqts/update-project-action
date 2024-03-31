@@ -39,7 +39,7 @@ function fetchContentMetadata(contentId, fieldName, projectNumber, owner) {
         }
       }
       field: fieldValueByName(name: $fieldName) {
-	... on ProjectV2ItemFieldIterationValue) {
+	... on ProjectV2ItemFieldIterationValue {
 	  value: title
 	}
         ... on ProjectV2ItemFieldSingleSelectValue {
