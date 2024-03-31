@@ -39,6 +39,9 @@ function fetchContentMetadata(contentId, fieldName, projectNumber, owner) {
         }
       }
       field: fieldValueByName(name: $fieldName) {
+	... on ProjectV2ItemFieldIterationValue) {
+	  value: title
+	}
         ... on ProjectV2ItemFieldSingleSelectValue {
           value: name
         }
@@ -98,7 +101,7 @@ exports.fetchContentMetadata = fetchContentMetadata;
  * @returns {Promise<GraphQlQueryResponseData>} - The project metadata
  */
 function fetchProjectMetadata(owner, projectNumber, fieldName, value, operation) {
-    var _a, _b;
+    var _a, _b, _c;
     return __awaiter(this, void 0, void 0, function* () {
         const result = yield octokit.graphql(`
     query ($organization: String!, $projectNumber: Int!) {
@@ -117,6 +120,12 @@ function fetchProjectMetadata(owner, projectNumber, fieldName, value, operation)
                   id
                   name
                 }
+              }
+	      ... on ProjectV2IterationField {
+                iterations {
+		  id
+		  title
+		}
               }
             }
           }
@@ -140,12 +149,21 @@ function fetchProjectMetadata(owner, projectNumber, fieldName, value, operation)
                 return {};
             }
         }
+        const iteration = value.startsWith("[") && value.endsWith("]")
+            ? field.iterations[parseInt(value.slice(1).slice(0, -1))]
+            : (_c = field.iterations) === null || _c === void 0 ? void 0 : _c.find((i) => i.title === value);
+        if (field.dataType === "iteration" && operation === "update") {
+            if (!ensureExists(iteration, "Iteration", `Value ${value}`)) {
+                return {};
+            }
+        }
         return {
             projectId: result.organization.projectV2.id,
             field: {
                 fieldId: field.id,
                 fieldType: field.dataType.toLowerCase(),
                 optionId: option === null || option === void 0 ? void 0 : option.id,
+                iterationId: iteration === null || iteration === void 0 ? void 0 : iteration.id,
             },
         };
     });
@@ -200,6 +218,10 @@ function updateField(projectMetadata, contentMetadata, value) {
         if (projectMetadata.field.fieldType === "single_select") {
             valueToSet = projectMetadata.field.optionId;
             valueType = "singleSelectOptionId";
+        }
+        else if (projectMetadata.field.fieldType === "iteration") {
+            valueToSet = projectMetadata.field.iterationId;
+            valueType = "iterationId";
         }
         else {
             valueToSet = value;
