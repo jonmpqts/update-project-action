@@ -129,9 +129,11 @@ export async function fetchProjectMetadata(
                 }
               }
 	      ... on ProjectV2IterationField {
-                iterations {
-		  id
-		  title
+		configuration {
+                  iterations {
+		    id
+		    title
+		  }
 		}
               }
             }
@@ -176,8 +178,8 @@ export async function fetchProjectMetadata(
 
   const iteration =
     value.startsWith("[") && value.endsWith("]")
-      ? field.iterations[parseInt(value.slice(1).slice(0, -1))]
-      : field.iterations?.find(
+      ? field.configuration && field.configuration.iterations ? field.configuration.iterations[parseInt(value.slice(1).slice(0, -1))] : undefined
+      : field.configuration?.iterations?.find(
           (i: GraphQlQueryResponseData) => i.title === value
         );
 
