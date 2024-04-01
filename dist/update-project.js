@@ -101,7 +101,7 @@ exports.fetchContentMetadata = fetchContentMetadata;
  * @returns {Promise<GraphQlQueryResponseData>} - The project metadata
  */
 function fetchProjectMetadata(owner, projectNumber, fieldName, value, operation) {
-    var _a, _b, _c;
+    var _a, _b, _c, _d;
     return __awaiter(this, void 0, void 0, function* () {
         const result = yield octokit.graphql(`
     query ($organization: String!, $projectNumber: Int!) {
@@ -122,9 +122,11 @@ function fetchProjectMetadata(owner, projectNumber, fieldName, value, operation)
                 }
               }
 	      ... on ProjectV2IterationField {
-                iterations {
-		  id
-		  title
+		configuration {
+                  iterations {
+		    id
+		    title
+		  }
 		}
               }
             }
@@ -150,8 +152,8 @@ function fetchProjectMetadata(owner, projectNumber, fieldName, value, operation)
             }
         }
         const iteration = value.startsWith("[") && value.endsWith("]")
-            ? field.iterations[parseInt(value.slice(1).slice(0, -1))]
-            : (_c = field.iterations) === null || _c === void 0 ? void 0 : _c.find((i) => i.title === value);
+            ? field.configuration && field.configuration.iterations ? field.configuration.iterations[parseInt(value.slice(1).slice(0, -1))] : undefined
+            : (_d = (_c = field.configuration) === null || _c === void 0 ? void 0 : _c.iterations) === null || _d === void 0 ? void 0 : _d.find((i) => i.title === value);
         if (field.dataType === "iteration" && operation === "update") {
             if (!ensureExists(iteration, "Iteration", `Value ${value}`)) {
                 return {};

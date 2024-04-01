@@ -178,7 +178,9 @@ export async function fetchProjectMetadata(
 
   const iteration =
     value.startsWith("[") && value.endsWith("]")
-      ? field.configuration && field.configuration.iterations ? field.configuration.iterations[parseInt(value.slice(1).slice(0, -1))] : undefined
+      ? field.configuration && field.configuration.iterations
+        ? field.configuration.iterations[parseInt(value.slice(1).slice(0, -1))]
+        : undefined
       : field.configuration?.iterations?.find(
           (i: GraphQlQueryResponseData) => i.title === value
         );
